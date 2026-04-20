@@ -1,0 +1,470 @@
+Hiding Text Inside an Image (Copy Command Method)
+Step 1: Create two text files.
+
+Code
+echo "This is file 1" > text1.txt
+echo "This is file 2" > text2.txt
+Step 2: Compress them into a single archive.
+
+Code
+zip text.zip text1.txt text2.txt
+Step 3: Append the archive to the image.
+
+Code
+copy /B image.jpg + text.zip new_img.jpg
+Step 4: Open new_img.jpg in an image viewer → it displays normally.
+Step 5: Rename new_img.jpg to new_img.zip or open with WinRAR/7‑Zip → extract hidden files.
+
+*****
+Repairing a Corrupted Image with Hex Editor
+Step 1: Open the JPEG file (Lab1_Task 3b_challenge.jpg) in Hexed.it.
+Step 2: Corrupt the file by overwriting the first four bytes with random values (e.g., 00 00 00 00).
+Step 3: Save the corrupted file → it will not open in an image viewer.
+Step 4: Re‑open in Hexed.it and replace the first four bytes with the correct JPEG header:
+
+Code
+FF D8 FF E0
+Step 5: Save the file again → the image opens normally.
+Step 6: Inspect the image or metadata for hidden information.
+
+
+*****
+Hiding Text in an Audio File
+Step 1: Create a BMP image with text (black background, white text). Save as text.bmp.
+Step 2: Open text.bmp in CoagulaLight1666.
+Step 3: Render the image using Render image without blue/noise.
+Step 4: Save the output as hidden.wav.
+Step 5: Open hidden.wav in Sonic Visualiser.
+Step 6: Add a Spectrogram layer and zoom out → the text appears inside the frequency spectrum.
+
+
+*****
+Encryption Mode ECB vs CBC
+Step 1: Download and Encrypt the Image
+
+Download pic_original.bmp from the given site.
+
+Encrypt using AES‑128 in ECB mode:
+
+Code
+openssl enc -aes-128-ecb -e -in pic_original.bmp -out pic_ecb.bmp -k 00112233445566778899aabbccddeeff
+Encrypt using AES‑128 in CBC mode:
+
+Code
+openssl enc -aes-128-cbc -e -in pic_original.bmp -out pic_cbc.bmp -k 00112233445566778899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+Step 2: Add Headers to Encrypted Files
+
+Extract the first 54 bytes (BMP header) from the original image:
+
+Code
+head -c 54 pic_original.bmp > header
+Extract pixel data from ECB‑encrypted file (starting at byte 55):
+
+Code
+tail -c +55 pic_ecb.bmp > body_ecb
+Reconstruct ECB image:
+
+Code
+cat header body_ecb > new_ecb.bmp
+Extract pixel data from CBC‑encrypted file:
+
+Code
+tail -c +55 pic_cbc.bmp > body_cbc
+Reconstruct CBC image:
+
+Code
+cat header body_cbc > new_cbc.bmp
+Step 3: View and Compare
+
+Open the reconstructed images:
+
+Code
+eog new_ecb.bmp
+eog new_cbc.bmp
+
+
+*****
+Padding in AES CBC Mode
+Step 1: Create files of different sizes
+
+bash
+echo -n 12345 > f1.txt          # 5 bytes
+echo -n 1234567890 > f2.txt     # 10 bytes
+echo -n 1234567890abcdef > f3.txt  # 16 bytes
+ls -l f*.txt
+Step 2: Encrypt and Decrypt with and without Padding
+
+🔹 For f1.txt (5 bytes):
+
+bash
+openssl enc -aes-128-cbc -e -in f1.txt -out f1.bin -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+openssl enc -aes-128-cbc -d -in f1.bin -out p1.txt -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+openssl enc -aes-128-cbc -d -in f1.bin -out p1_nopad.txt -nopad -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+🔹 For f2.txt (10 bytes):
+
+bash
+openssl enc -aes-128-cbc -e -in f2.txt -out f2.bin -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+openssl enc -aes-128-cbc -d -in f2.bin -out p2.txt -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+openssl enc -aes-128-cbc -d -in f2.bin -out p2_nopad.txt -nopad -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+🔹 For f3.txt (16 bytes):
+
+bash
+openssl enc -aes-128-cbc -e -in f3.txt -out f3.bin -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+openssl enc -aes-128-cbc -d -in f3.bin -out p3.txt -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+openssl enc -aes-128-cbc -d -in f3.bin -out p3_nopad.txt -nopad -k 001122334455667788899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+Step 3: Inspect with xxd
+
+bash
+xxd p1.txt
+xxd p1_nopad.txt
+xxd p2.txt
+xxd p2_nopad.txt
+xxd p3.txt
+xxd p3_nopad.txt
+
+
+
+*****
+Error Propagation – Corrupted Ciphertext
+Step 1: Create a large plaintext file (≥1000 bytes).
+
+bash
+touch plain.txt
+gedit plain.txt   # type or paste enough text to make it ~1000 bytes
+ls -l plain.txt
+Step 2: Encrypt using AES‑128 ECB mode.
+
+bash
+openssl enc -aes-128-ecb -e -in plain.txt -out error_prop.bin -k 00112233445566778899aabbccddeeff
+Step 3: Corrupt one bit in the ciphertext.
+
+Open error_prop.bin in hex editor:
+
+bash
+ghex error_prop.bin
+Flip/change one bit (e.g., change 01 to 00).
+
+Step 4: Decrypt the corrupted file.
+
+bash
+openssl enc -aes-128-ecb -d -in error_prop.bin -out error_prop.txt -k 00112233445566778899aabbccddeeff
+gedit error_prop.txt
+Step 5: Repeat with CBC mode.
+
+bash
+openssl enc -aes-128-cbc -e -in plain.txt -out error_prop_cbc.bin -k 00112233445566778899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+ghex error_prop_cbc.bin   # flip one bit
+openssl enc -aes-128-cbc -d -in error_prop_cbc.bin -out error_prop_cbc.txt -k 00112233445566778899aabbccddeeff -iv 0102030405060708090a0b0c0d0e0f
+gedit error_prop_cbc.txt
+
+
+
+*****
+Initialization Vector (IV)
+Step 1: Encrypt the same plaintext with different IVs.
+
+bash
+openssl enc -aes-128-cbc -e -in plain.txt -out cipher1.bin -k 00112233445566778899aabbccddeeff -iv 0102030405060708090a0b0c0e0f
+openssl enc -aes-128-cbc -e -in plain.txt -out cipher2.bin -k 00112233445566778899aabbccddeeff -iv 102030405060708090a0b0c0d0e0f0
+Step 2: Inspect ciphertexts.
+
+bash
+xxd cipher1.bin
+xxd cipher2.bin
+
+
+*****
+RSA algorithm
+
+# Step 1: Generate RSA Private Key
+openssl genrsa -out key.pri 2048
+
+# Step 2: Inspect Private Key
+openssl rsa -in key.pri -noout -text
+
+# Step 3: Generate Public Key
+openssl rsa -in key.pri -out key.pub -pubout
+
+openssl rsa -in key.pub -pubin -noout -text
+
+# Step 4: Encrypt with Public Key
+openssl rsautl -encrypt -inkey key.pub -pubin -in Earth.txt -out Earth.enc
+
+# Step 5: Decrypt with Private Key
+openssl rsautl -decrypt -inkey key.pri -in Earth.enc -out Earth.dec
+
+
+xxd earh.txt
+xxd earth.enc
+xxd earth.dec
+
+# Step 7: Encrypt a Secret Key with RSA
+openssl rand -hex -out encryption.key 32
+openssl rsautl -encrypt -inkey key.pub -pubin -in encryption.key -out encryption.key.enc
+openssl rsautl -decrypt -inkey key.pri -in encryption.key.enc -out encryption.key.dec
+
+
+
+*****
+
+Task 1: Capture packets on a specific interface
+bash
+tcpdump -i enp0s3
+Task 2: Capture packets from a specific IP
+Ping a host (e.g., ping www.google.com) and note the IP.
+
+Run:
+
+bash
+sudo tcpdump host 192.168.36.165
+Task 3: Capture packets on a specific port
+bash
+sudo tcpdump port 80
+Task 4: Real‑time capture
+bash
+tcpdump
+Stop with Ctrl+C.
+
+Task 5: Save capture to a file
+bash
+sudo tcpdump -i enp0s3 -w capture.pcap
+Task 6: Read from a saved file
+bash
+tcpdump -r capture.pcap
+Task 7: Combine filters
+bash
+tcpdump host 192.168.36.165 -w capture.pcap
+Task 8: Capture protocol packets (ICMP)
+bash
+tcpdump icmp
+Task 9: ICMP packets from/to a specific host
+bash
+tcpdump icmp and host 192.168.36.165
+Task 10: Capture only TCP SYN packets
+bash
+sudo tcpdump -i enp0s3 "tcp[tcpflags] & (tcp-syn) != 0"
+Task 11: Capture outgoing packets
+bash
+sudo tcpdump -i enp0s3 -Q out
+Task 12: Capture incoming packets
+bash
+sudo tcpdump -i enp0s3 -Q in
+
+
+*****
+Ethernet + IP in Scapy
+
+from scapy.all import *
+
+pkt = Ether()/IP(dst="192.168.1.1")
+pkt.show()
+
+
+*****
+Shell script port scan using NetCat
+
+#!/bin/bash
+for port in {75..85}
+do
+    nc -zv -w1 www.example.com $port
+done
+
+gedit scan.sh
+chmod +x scan.sh
+./scan.sh
+
+
+*****
+Sniff 10 packets and show details
+
+from scapy.all import *
+packet = sniff(count=10)
+packet.summary()
+
+for p in packet:
+    p.show()
+
+
+*****
+Netcat 2 terminals communication
+
+nc -vlp 1234
+nc localhost 1234
+
+Netcat across system communication
+
+nc -vlp 1234
+nc <ip_add_sysA> 1234
+
+
+*****
+Traceroute in Scapy
+
+traceroute(["www.example.com"])
+or
+traceroute(["www.google.com"])
+
+
+*****
+Nmap ping scan + single IP
+
+nmap -sn www.google.com
+nmap -sn 192.168.56.0/24
+nmap -sn 192.168.1.12
+
+
+*****
+Nmap range + subnet
+
+nmap 192.168.2.20-30
+nmap 192.168.2.0/24
+
+
+*****
+Nmap top 1000 ports + service version
+
+nmap 192.168.56.103
+nmap -sV 192.168.56.103
+
+
+
+*****
+Nmap OS detection + Aggressive scan
+
+sudo nmap -O ip-add
+sudo nmap -A ip-add
+
+
+*****
+Send ICMP in Scapy
+
+sudo scapy
+
+send(IP(dst="8.8.8.8")/ICMP())
+
+
+
+*****
+Nmap vulnerability scan + save to file
+
+sudo nmap --script vuln www.example.com
+sudo nmap --script vuln www.example.com -oN vuln_scan.txt
+
+
+*****
+Route + transit delays in Scapy
+
+sudo scapy
+
+traceroute(["www.example.com", "www.google.com"])
+
+
+
+*****
+
+terminal to browser using netcat
+
+nc -l -p 6000
+
+localhost:6000
+
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Server: nooblinux
+
+<!doctype html>
+<title>Nooblinux</title>
+<h1>Hello from Netcat!</h1>
+
+
+
+<img src="https://img.freepik.com/free-photo/parakeet-platycercus-barnardii-illustrated-by-elizabeth-gould_53876-65557.jpg?t=st=1743689713~exp=1743693313~hmac=4dac4220b65e8b24f283d2fea7db0d8085fb55951e7de8a541604d03988a070b&w=740">
+
+
+*****
+Python network scanner using Scapy or host up in a local network using Scapy
+
+#!/usr/bin/env python3
+from scapy.all import ARP, Ether, srp
+
+# Target subnet (adjust to your network)
+target = "192.168.1.0/24"
+
+# Build ARP request
+arp = ARP(pdst=target)
+ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+packet = ether/arp
+
+# Send and receive
+result = srp(packet, timeout=3, verbose=0)[0]
+
+# Print discovered hosts
+print("Active hosts:")
+for sent, received in result:
+    print(f"IP: {received.psrc}, MAC: {received.hwsrc}")
+
+
+
+
+*****
+from PIL import Image
+import numpy as np
+
+# Encode function
+def encode(src, msg, dest, password):
+    img = Image.open(src)
+    arr = np.array(img)
+
+    msg += password   # password acts as end marker
+    binary_msg = ''.join(format(ord(i), '08b') for i in msg)
+
+    flat = arr.flatten()
+    if len(binary_msg) > len(flat):
+        print("Message too long!")
+        return
+
+    for i in range(len(binary_msg)):
+        flat[i] = (flat[i] & 254) | int(binary_msg[i])
+
+    enc_arr = flat.reshape(arr.shape)
+    Image.fromarray(enc_arr.astype('uint8')).save(dest)
+    print("Image Encoded Successfully")
+
+# Decode function
+def decode(src, password):
+    img = Image.open(src)
+    arr = np.array(img).flatten()
+
+    bits = ''.join(str(i & 1) for i in arr)
+    chars = [bits[i:i+8] for i in range(0, len(bits), 8)]
+
+    msg = ""
+    for b in chars:
+        if len(b) < 8:
+            continue
+        msg += chr(int(b, 2))
+        if msg.endswith(password):
+            print("Hidden Message:", msg[:-len(password)])
+            return
+
+    print("Wrong Password!")
+
+# Main function
+print("1. Encode")
+print("2. Decode")
+choice = input("Enter choice: ")
+
+if choice == '1':
+    src = input("Enter source image: ")
+    msg = input("Enter secret message: ")
+    dest = input("Enter output image: ")
+    password = input("Enter password: ")
+    encode(src, msg, dest, password)
+
+elif choice == '2':
+    src = input("Enter encoded image: ")
+    password = input("Enter password: ")
+    decode(src, password)
+
+else:
+    print("Invalid Choice")
