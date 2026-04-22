@@ -365,3 +365,92 @@ in Jenkins, new item, pipeline, git, in script add Jenkinsfile, sava and build n
 
 
 
+(2)
+
+cd desktop
+mkdir git1
+cd git1
+echo "first" > f1.txt
+git add .
+git commit -m "A"
+git branch mybranch 
+git checkout mybranch
+echo "branch change" >> f1.txt
+git add .
+git commit -m "B"
+git checkout main
+echo "main change" > f1.txt
+git add .
+git commit -m "C"
+git merge mybranch
+git mergetool 
+git add .
+git commit -m "resolved"
+git log
+
+
+(3)
+
+--create repo
+git init
+cd desktop
+git clone https://github.com/Raj-24680/pull2.git
+cd pull2
+nano c1.java
+git add .
+git commit -m "cd"
+javac c1.java
+java c1
+git push origin main
+--make changes in readme in GitHub
+git pull origin main
+git log
+
+
+(4)
+
+--create repo
+git init
+cd desktop
+git clone https://github.com/Raj-24680/pull3.git
+cd pull3
+echo "dc">e2.txt
+git add .
+git commit -m "cd"
+git push origin main
+--make changes in radme in GitHub
+git pull origin main
+git log
+git branch fre1
+git checkout fre1
+echo "dccdw">>e2.txt
+git add .
+git commit -m "cd"
+echo "dccddcw">e3.txt
+git add .
+git commit -m "cd"
+git push origin fre1
+--gotto repo click compare pull request
+git checkout main
+git pull origin main
+git push origin --delete fre1
+
+git branch -d feature-1 
+
+
+(5)
+
+--create repo
+git init
+cd desktop
+git clone https://github.com/Raj-24680/pull3.git
+cd pull3
+git pull
+git tag v1.0
+git tag
+git tag -a v2.0 -m "tag created"
+git show v1.0              what is howing output doubt?
+git tag v3.0
+git push --tags
+git push origin -d v1.0
+git tag -d v1.0
