@@ -268,3 +268,100 @@ docker run -d -p 8080:80 username/my-docker-app:1.0
 docker ps
 docker stop <container_id>
 docker rm <container_id>
+
+
+
+********
+*demo-11*
+********
+
+
+
+
+mkdir pro-11
+cd pro-11
+in cmd: mvn archetype:generate, groupid:com.example, artifactid: junt-pro, keep rest default
+
+in calculator.java:
+public class Calculator {
+public int add(int a, int b) {
+return a + b;
+}
+public int divide(int a, int b) {
+if(b == 0) {
+throw new IllegalArgumentException("Cannot divide by zero");
+}
+return a / b;
+}
+}
+
+in calculatortest.java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+class CalculatorTest {
+Calculator calculator = new Calculator();
+@Test
+void testAddition() {
+assertEquals(10, calculator.add(5,5));
+}
+@Test
+void testDivision() {
+assertEquals(2, calculator.divide(10,5));
+}
+@Test
+void testDivideByZero() {
+Exception exception = assertThrows(
+IllegalArgumentException.class,
+
+() -> calculator.divide(10,0)
+);
+assertEquals("Cannot divide by zero", exception.getMessage());
+}
+}
+
+in cmd mvn clean test
+
+create a Jenkinsfile
+pipeline {
+agent any
+tools {
+jdk 'JDK17'
+maven 'Maven3'
+}
+stages {
+stage('Build') {
+steps {
+bat 'mvn clean compile'
+}
+
+}
+stage('Test') {
+steps {
+bat 'mvn test'
+}
+}
+}
+post {
+always {
+junit '**/target/surefire-reports/*.xml'
+}
+}
+}
+
+create repo  in github
+git init, git add . , git commit -m "init"
+
+
+in Jenkins, new item, pipeline, git, in script add Jenkinsfile, sava and build now. change in cal script from a+b to a+b+1 of return
+
+
+
+
+
+********
+*demo-14*
+********
+
+
+
+
